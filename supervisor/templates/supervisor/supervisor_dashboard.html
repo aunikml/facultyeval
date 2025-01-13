@@ -1,0 +1,40 @@
+{% extends 'responseupload/base.html' %}
+
+{% block title %}Supervisor Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mt-4 mb-4">
+        <h1 class="fw-bold">Supervisor Dashboard</h1>
+        <p class="text-muted">Total Users: {{ users|length }}</p>
+    </div>
+    <div class="row">
+        {% for user in users %}
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm border-0 card-hover">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold text-primary">{{ user.get_full_name }}</h5>
+                    <p class="card-text text-muted">Username: <span class="text-dark">{{ user.username }}</span></p>
+                    <a href="{% url 'supervisor:user_courses' user.id %}" class="btn btn-primary btn-sm w-100 mt-3">View Courses</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <p class="text-center text-muted">No users found.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .card-hover {
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .card-hover:hover {
+        transform: scale(1.05);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    }
+</style>
+
+{% endblock %}

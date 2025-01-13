@@ -1,0 +1,190 @@
+{% extends 'responseupload/base.html' %}
+{% load custom_filters %}
+
+{% block title %}{{ user.first_name }} {{ user.last_name }}'s Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .faculty-name {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    .filter-section {
+        margin-bottom: 20px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    .filter-input, .filter-select {
+        width: 100%;
+        max-width: 200px;
+    }
+    .card {
+        border: none;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    }
+    .card-header {
+        background-color: #0d6efd;
+        color: white;
+        font-weight: bold;
+        text-align: center;
+    }
+    .list-group-item {
+        border: none;
+        padding: 10px 15px;
+        background: #f9f9f9;
+        margin-bottom: 5px;
+        transition: background-color 0.3s ease;
+    }
+    .list-group-item:hover {
+        background-color: #e9ecef;
+    }
+    .no-results {
+        color: gray;
+        text-align: center;
+        font-style: italic;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Faculty Name -->
+    <div class="faculty-name">
+        <h2>Faculty: {{ user.first_name }} {{ user.last_name }}</h2>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <input type="text" id="filter-code" class="form-control filter-input" placeholder="Search by Code">
+        <input type="text" id="filter-name" class="form-control filter-input" placeholder="Search by Name">
+        <select id="filter-semester" class="form-select filter-select">
+            <option value="">All Semesters</option>
+            <option value="SPRING">SPRING</option>
+            <option value="SUMMER">SUMMER</option>
+            <option value="FALL">FALL</option>
+        </select>
+        <select id="filter-year" class="form-select filter-select">
+            {% for year in range|slice:":-1" %}
+                <option value="{{ year }}">{{ year }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- Courses Section -->
+    <div class="row">
+        <!-- Faculty Evaluation -->
+        <div class="col-md-6">
+            <div class="card course-card">
+                <div class="card-header">Faculty Evaluation</div>
+                <div class="card-body">
+                    <ul class="list-group" id="faculty-course-list">
+                        {% for course in faculty_response_courses %}
+                            <li class="list-group-item" 
+                                data-code="{{ course.code }}" 
+                                data-name="{{ course.name }}" 
+                                data-semester="{{ course.semester }}" 
+                                data-year="{{ course.year }}">
+                                <a href="{% url 'responseupload:course_detail' course.id user.id %}" class="text-decoration-none fw-bold text-dark">
+                                    {{ course.code }} - {{ course.name }}
+                                </a>
+                                <br>
+                                <small>
+                                    Semester: {{ course.semester }}, Year: {{ course.year }}<br>
+                                    Total Respondents: {{ faculty_response_counts|get_item:course.id }}
+                                </small>
+                            </li>
+                        {% empty %}
+                            <li class="list-group-item no-results">No courses found.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Course Evaluation -->
+        <div class="col-md-6">
+            <div class="card course-card">
+                <div class="card-header">Course Evaluation</div>
+                <div class="card-body">
+                    <ul class="list-group" id="course-course-list">
+                        {% for course in course_response_courses %}
+                            <li class="list-group-item" 
+                                data-code="{{ course.code }}" 
+                                data-name="{{ course.name }}" 
+                                data-semester="{{ course.semester }}" 
+                                data-year="{{ course.year }}">
+                                <a href="{% url 'responseupload:course_response_detail' course.id user.id %}" class="text-decoration-none fw-bold text-dark">
+                                    {{ course.code }} - {{ course.name }}
+                                </a>
+                                <br>
+                                <small>
+                                    Semester: {{ course.semester }}, Year: {{ course.year }}<br>
+                                    Total Respondents: {{ course_response_counts|get_item:course.id }}
+                                </small>
+                            </li>
+                        {% empty %}
+                            <li class="list-group-item no-results">No courses found.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const filters = {
+        code: document.getElementById('filter-code'),
+        name: document.getElementById('filter-name'),
+        semester: document.getElementById('filter-semester'),
+        year: document.getElementById('filter-year')
+    };
+
+    const filterCourses = (listId) => {
+        const list = document.getElementById(listId);
+        const items = list.querySelectorAll('.list-group-item:not(.no-results)');
+        const noResults = list.querySelector('.no-results');
+
+        let visibleCount = 0;
+        items.forEach(item => {
+            const code = item.dataset.code.toLowerCase();
+            const name = item.dataset.name.toLowerCase();
+            const semester = item.dataset.semester;
+            const year = item.dataset.year;
+
+            const matchesCode = filters.code.value.trim() === '' || code.includes(filters.code.value.toLowerCase());
+            const matchesName = filters.name.value.trim() === '' || name.includes(filters.name.value.toLowerCase());
+            const matchesSemester = filters.semester.value === '' || semester === filters.semester.value;
+            const matchesYear = filters.year.value === '' || year === filters.year.value;
+
+            if (matchesCode && matchesName && matchesSemester && matchesYear) {
+                item.style.display = '';
+                visibleCount++;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+
+        noResults.style.display = visibleCount === 0 ? '' : 'none';
+    };
+
+    const applyFilters = () => {
+        filterCourses('faculty-course-list');
+        filterCourses('course-course-list');
+    };
+
+    Object.values(filters).forEach(filter => {
+        filter.addEventListener('input', applyFilters);
+        filter.addEventListener('change', applyFilters);
+    });
+</script>
+{% endblock %}
