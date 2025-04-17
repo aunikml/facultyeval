@@ -98,7 +98,7 @@ class FacultyResponseAdmin(admin.ModelAdmin):
             from_email = settings.DEFAULT_FROM_EMAIL
 
             send_mail(subject, message, from_email, recipient_list)
-    list_display = ('course', 'semester')
+    list_display = ('course', 'semester', 'year', 'faculty')
     list_filter = ('course','semester')
     search_fields = ('course__name', 'general_comments')  # Search by course name
     form = FacultyResponseAdminForm

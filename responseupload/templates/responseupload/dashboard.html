@@ -12,18 +12,43 @@
     .filter-section {
         margin-bottom: 20px;
         display: flex;
-        gap: 10px;
+        gap: 15px;
         flex-wrap: wrap;
-        align-items: center;
+        align-items: flex-end;
+    }
+    .filter-group {
+        flex: 1;
+        min-width: 180px;
+        max-width: 220px;
+    }
+    .filter-label {
+        font-size: 0.85rem;
+        margin-bottom: 5px;
+        color: #333;
     }
     .filter-input, .filter-select {
         width: 100%;
-        max-width: 200px;
+        height: 38px;
+        font-size: 0.9rem;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    .filter-input:focus, .filter-select:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 5px rgba(13, 110, 253, 0.3);
+    }
+    .filter-input:not(:placeholder-shown), .filter-select:not(:invalid) {
+        border-color: #0d6efd;
+    }
+    .reset-btn {
+        height: 38px;
+        padding: 0 20px;
+        font-size: 0.9rem;
     }
     .card {
         border: none;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         transition: transform 0.3s ease, box-shadow 0.3s ease;
+        margin-bottom: 20px;
     }
     .card:hover {
         transform: translateY(-5px);
@@ -34,21 +59,71 @@
         color: white;
         font-weight: bold;
         text-align: center;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 15px;
+        transition: background-color 0.3s ease;
+    }
+    .card-header:hover {
+        background-color: #0b5ed7;
+    }
+    .card-header .toggle-icon {
+        transition: transform 0.3s ease;
+    }
+    .card-header .toggle-icon.collapsed {
+        transform: rotate(-90deg);
     }
     .list-group-item {
         border: none;
-        padding: 10px 15px;
+        padding: 12px 15px;
         background: #f9f9f9;
         margin-bottom: 5px;
-        transition: background-color 0.3s ease;
+        transition: background-color 0.3s ease, opacity 0.3s ease;
+        font-size: 0.95rem;
     }
     .list-group-item:hover {
         background-color: #e9ecef;
+    }
+    .list-group-item small {
+        color: #555;
+        line-height: 1.4;
     }
     .no-results {
         color: gray;
         text-align: center;
         font-style: italic;
+        padding: 20px;
+    }
+    .filter-results {
+        font-size: 0.9rem;
+        color: #555;
+        margin-top: 10px;
+        width: 100%;
+    }
+    .filter-hint {
+        font-size: 0.85rem;
+        color: #777;
+        margin-top: 5px;
+        display: none;
+    }
+    .filter-hint.active {
+        display: block;
+    }
+    @media (max-width: 992px) {
+        .filter-group {
+            min-width: 45%;
+        }
+    }
+    @media (max-width: 576px) {
+        .filter-group {
+            min-width: 100%;
+        }
+        .reset-btn {
+            width: 100%;
+            margin-top: 10px;
+        }
     }
 </style>
 {% endblock %}
@@ -61,79 +136,101 @@
     </div>
 
     <!-- Filter Section -->
-    <div class="filter-section">
-        <input type="text" id="filter-code" class="form-control filter-input" placeholder="Search by Code">
-        <input type="text" id="filter-name" class="form-control filter-input" placeholder="Search by Name">
-        <select id="filter-semester" class="form-select filter-select">
-            <option value="">All Semesters</option>
-            <option value="SPRING">SPRING</option>
-            <option value="SUMMER">SUMMER</option>
-            <option value="FALL">FALL</option>
-        </select>
-        <select id="filter-year" class="form-select filter-select">
-            {% for year in range|slice:":-1" %}
-                <option value="{{ year }}">{{ year }}</option>
-            {% endfor %}
-        </select>
+    <div class="filter-section" id="filter-section" aria-label="Course filter controls">
+        <div class="filter-group">
+            <label for="filter-code" class="filter-label">Course Code</label>
+            <input type="text" id="filter-code" class="form-control filter-input" placeholder="Enter course code" aria-describedby="filter-code-help" data-bs-toggle="tooltip" title="Enter partial or full course code">
+            <small id="filter-code-help" class="form-text text-muted visually-hidden">Search by course code</small>
+        </div>
+        <div class="filter-group">
+            <label for="filter-name" class="filter-label">Course Name</label>
+            <input type="text" id="filter-name" class="form-control filter-input" placeholder="Enter course name" aria-describedby="filter-name-help" data-bs-toggle="tooltip" title="Enter partial or full course name">
+            <small id="filter-name-help" class="form-text text-muted visually-hidden">Search by course name</small>
+        </div>
+        <div class="filter-group">
+            <label for="filter-semester" class="filter-label">Semester</label>
+            <select id="filter-semester" class="form-select filter-select" aria-describedby="filter-semester-help" data-bs-toggle="tooltip" title="Select a semester">
+                <option value="" selected>Select a semester</option>
+                <option value="SPRING">Spring</option>
+                <option value="SUMMER">Summer</option>
+                <option value="FALL">Fall</option>
+            </select>
+            <small id="filter-semester-help" class="form-text text-muted visually-hidden">Filter by semester</small>
+        </div>
+        <div class="filter-group">
+            <label for="filter-year" class="filter-label">Year</label>
+            <select id="filter-year" class="form-select filter-select" aria-describedby="filter-year-help" data-bs-toggle="tooltip" title="Select a year">
+                <option value="" selected>Select a year</option>
+                {% for year in years %}
+                    <option value="{{ year }}">{{ year }}</option>
+                {% endfor %}
+            </select>
+            <small id="filter-year-help" class="form-text text-muted visually-hidden">Filter by year</small>
+        </div>
+        <button type="button" id="reset-filters" class="btn btn-outline-secondary reset-btn" data-bs-toggle="tooltip" title="Clear all filters">Reset Filters</button>
+        <div class="filter-results" id="filter-results" aria-live="polite"></div>
+        <div class="filter-hint" id="filter-hint">Use the filters above to narrow down courses by code, name, semester, or year.</div>
     </div>
 
     <!-- Courses Section -->
     <div class="row">
         <!-- Faculty Evaluation -->
         <div class="col-md-6">
-            <div class="card course-card">
-                <div class="card-header">Faculty Evaluation</div>
-                <div class="card-body">
-                    <ul class="list-group" id="faculty-course-list">
-                        {% for course in faculty_response_courses %}
-                            <li class="list-group-item" 
-                                data-code="{{ course.code }}" 
-                                data-name="{{ course.name }}" 
-                                data-semester="{{ course.semester }}" 
-                                data-year="{{ course.year }}">
-                                <a href="{% url 'responseupload:course_detail' course.id user.id %}" class="text-decoration-none fw-bold text-dark">
-                                    {{ course.code }} - {{ course.name }}
-                                </a>
-                                <br>
-                                <small>
-                                    Semester: {{ course.semester }}, Year: {{ course.year }}<br>
-                                    Total Respondents: {{ faculty_response_counts|get_item:course.id }}
-                                </small>
-                            </li>
-                        {% empty %}
-                            <li class="list-group-item no-results">No courses found.</li>
-                        {% endfor %}
-                    </ul>
+            <div class="card course-card" id="faculty-card">
+                <div class="card-header" data-bs-toggle="collapse" data-bs-target="#faculty-course-list" aria-expanded="true" aria-controls="faculty-course-list">
+                    Faculty Evaluation
+                    <i class="bi bi-chevron-down toggle-icon"></i>
                 </div>
+                <ul class="list-group collapse show" id="faculty-course-list" aria-label="Faculty evaluation courses">
+                    {% for course in faculty_response_courses %}
+                        <li class="list-group-item" 
+                            data-code="{{ course.code|lower }}" 
+                            data-name="{{ course.name|lower }}" 
+                            data-semester="{{ course.semester }}" 
+                            data-year="{{ course.year }}">
+                            <a href="{% url 'responseupload:course_detail' course.id user.id %}" class="text-decoration-none fw-bold text-dark">
+                                {{ course.code }} - {{ course.name }}
+                            </a>
+                            <br>
+                            <small>
+                                <i class="bi bi-calendar3"></i> Semester: {{ course.semester }}, Year: {{ course.year }}<br>
+                                <i class="bi bi-people"></i> Total Respondents: {{ faculty_response_counts|get_item:course.id }}
+                            </small>
+                        </li>
+                    {% empty %}
+                        <li class="list-group-item no-results">No faculty evaluation courses found.</li>
+                    {% endfor %}
+                </ul>
             </div>
         </div>
 
         <!-- Course Evaluation -->
         <div class="col-md-6">
-            <div class="card course-card">
-                <div class="card-header">Course Evaluation</div>
-                <div class="card-body">
-                    <ul class="list-group" id="course-course-list">
-                        {% for course in course_response_courses %}
-                            <li class="list-group-item" 
-                                data-code="{{ course.code }}" 
-                                data-name="{{ course.name }}" 
-                                data-semester="{{ course.semester }}" 
-                                data-year="{{ course.year }}">
-                                <a href="{% url 'responseupload:course_response_detail' course.id user.id %}" class="text-decoration-none fw-bold text-dark">
-                                    {{ course.code }} - {{ course.name }}
-                                </a>
-                                <br>
-                                <small>
-                                    Semester: {{ course.semester }}, Year: {{ course.year }}<br>
-                                    Total Respondents: {{ course_response_counts|get_item:course.id }}
-                                </small>
-                            </li>
-                        {% empty %}
-                            <li class="list-group-item no-results">No courses found.</li>
-                        {% endfor %}
-                    </ul>
+            <div class="card course-card" id="course-card">
+                <div class="card-header" data-bs-toggle="collapse" data-bs-target="#course-course-list" aria-expanded="true" aria-controls="course-course-list">
+                    Course Evaluation
+                    <i class="bi bi-chevron-down toggle-icon"></i>
                 </div>
+                <ul class="list-group collapse show" id="course-course-list" aria-label="Course evaluation courses">
+                    {% for course in course_response_courses %}
+                        <li class="list-group-item" 
+                            data-code="{{ course.code|lower }}" 
+                            data-name="{{ course.name|lower }}" 
+                            data-semester="{{ course.semester }}" 
+                            data-year="{{ course.year }}">
+                            <a href="{% url 'responseupload:course_response_detail' course.id user.id %}" class="text-decoration-none fw-bold text-dark">
+                                {{ course.code }} - {{ course.name }}
+                            </a>
+                            <br>
+                            <small>
+                                <i class="bi bi-calendar3"></i> Semester: {{ course.semester }}, Year: {{ course.year }}<br>
+                                <i class="bi bi-people"></i> Total Respondents: {{ course_response_counts|get_item:course.id }}
+                            </small>
+                        </li>
+                    {% empty %}
+                        <li class="list-group-item no-results">No course evaluation courses found.</li>
+                    {% endfor %}
+                </ul>
             </div>
         </div>
     </div>
@@ -142,32 +239,52 @@
 
 {% block extra_js %}
 <script>
+    // Debounce function for input events
+    const debounce = (func, delay) => {
+        let timeoutId;
+        return (...args) => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => func.apply(null, args), delay);
+        };
+    };
+
+    // DOM elements
     const filters = {
         code: document.getElementById('filter-code'),
         name: document.getElementById('filter-name'),
         semester: document.getElementById('filter-semester'),
         year: document.getElementById('filter-year')
     };
+    const resetButton = document.getElementById('reset-filters');
+    const filterResults = document.getElementById('filter-results');
+    const filterHint = document.getElementById('filter-hint');
+    const lists = {
+        faculty: document.getElementById('faculty-course-list'),
+        course: document.getElementById('course-course-list')
+    };
 
+    // Filter courses
     const filterCourses = (listId) => {
-        const list = document.getElementById(listId);
+        const list = lists[listId.split('-')[0]];
         const items = list.querySelectorAll('.list-group-item:not(.no-results)');
         const noResults = list.querySelector('.no-results');
-
         let visibleCount = 0;
+
         items.forEach(item => {
-            const code = item.dataset.code.toLowerCase();
-            const name = item.dataset.name.toLowerCase();
+            const code = item.dataset.code;
+            const name = item.dataset.name;
             const semester = item.dataset.semester;
             const year = item.dataset.year;
 
-            const matchesCode = filters.code.value.trim() === '' || code.includes(filters.code.value.toLowerCase());
-            const matchesName = filters.name.value.trim() === '' || name.includes(filters.name.value.toLowerCase());
+            const matchesCode = filters.code.value.trim() === '' || code.includes(filters.code.value.toLowerCase().trim());
+            const matchesName = filters.name.value.trim() === '' || name.includes(filters.name.value.toLowerCase().trim());
             const matchesSemester = filters.semester.value === '' || semester === filters.semester.value;
             const matchesYear = filters.year.value === '' || year === filters.year.value;
 
             if (matchesCode && matchesName && matchesSemester && matchesYear) {
+                item.style.opacity = '0';
                 item.style.display = '';
+                setTimeout(() => { item.style.opacity = '1'; }, 10);
                 visibleCount++;
             } else {
                 item.style.display = 'none';
@@ -175,16 +292,72 @@
         });
 
         noResults.style.display = visibleCount === 0 ? '' : 'none';
+        return visibleCount;
     };
 
+    // Apply filters and update results
     const applyFilters = () => {
-        filterCourses('faculty-course-list');
-        filterCourses('course-course-list');
+        const facultyCount = filterCourses('faculty-course-list');
+        const courseCount = filterCourses('course-course-list');
+        const totalCount = facultyCount + courseCount;
+        filterResults.textContent = totalCount === 0 
+            ? 'No courses match the current filters.' 
+            : `Showing ${facultyCount} Faculty and ${courseCount} Course evaluations`;
+        filterHint.classList.toggle('active', totalCount === faculty_response_courses_length + course_response_courses_length);
     };
 
-    Object.values(filters).forEach(filter => {
-        filter.addEventListener('input', applyFilters);
-        filter.addEventListener('change', applyFilters);
+    // Reset filters
+    const resetFilters = () => {
+        Object.values(filters).forEach(filter => filter.value = '');
+        applyFilters();
+    };
+
+    // Persist collapse state
+    const persistCollapseState = () => {
+        document.querySelectorAll('.card-header').forEach(header => {
+            const targetId = header.dataset.bsTarget;
+            const isCollapsed = !document.querySelector(targetId).classList.contains('show');
+            const icon = header.querySelector('.toggle-icon');
+            icon.classList.toggle('collapsed', isCollapsed);
+            localStorage.setItem(targetId, isCollapsed ? 'collapsed' : 'expanded');
+        });
+    };
+
+    // Restore collapse state
+    const restoreCollapseState = () => {
+        document.querySelectorAll('.card-header').forEach(header => {
+            const targetId = header.dataset.bsTarget;
+            const state = localStorage.getItem(targetId);
+            if (state === 'collapsed') {
+                document.querySelector(targetId).classList.remove('show');
+                header.querySelector('.toggle-icon').classList.add('collapsed');
+            }
+        });
+    };
+
+    // Event listeners
+    filters.code.addEventListener('input', debounce(applyFilters, 300));
+    filters.name.addEventListener('input', debounce(applyFilters, 300));
+    filters.semester.addEventListener('change', applyFilters);
+    filters.year.addEventListener('change', applyFilters);
+    resetButton.addEventListener('click', resetFilters);
+
+    // Initialize collapsible cards
+    document.querySelectorAll('.card-header').forEach(header => {
+        header.addEventListener('click', persistCollapseState);
     });
+
+    // Initialize tooltips
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(element => {
+        new bootstrap.Tooltip(element);
+    });
+
+    // Restore collapse state and apply filters on load
+    restoreCollapseState();
+    applyFilters();
+
+    // Pass course counts to JavaScript
+    const faculty_response_courses_length = {{ faculty_response_courses|length }};
+    const course_response_courses_length = {{ course_response_courses|length }};
 </script>
 {% endblock %}
