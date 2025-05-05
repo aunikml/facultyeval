@@ -1,22 +1,40 @@
+# responseupload/urls.py
 from django.urls import path
 from . import views
 
-app_name = 'responseupload'
+app_name = 'responseupload' # Namespace for this app's URLs
 
 urlpatterns = [
-    path('', views.home, name='home'),  # Add this line for the homepage
+    # Home/Root URL - Redirects to login
+    path('', views.home, name='home'),
+
+    # Authentication URLs
     path('login/', views.user_login, name='login'),
     path('logout/', views.user_logout, name='logout'),
-    path('dashboard/', views.dashboard, name='dashboard'),
     path('change_password/', views.change_password, name='change_password'),
-    path('create_program/', views.create_program, name='create_program'),
-    path('create_course/', views.create_course, name='create_course'),
-    path('create_faculty/', views.create_faculty, name='create_faculty'),
-    path('create_semester/', views.create_semester, name='create_semester'),
-    path('create_year/', views.create_year, name='create_year'),
-    path('create_course_section/', views.create_course_section, name='create_course_section'),
-    path('faculty_responses/', views.view_faculty_responses, name='view_faculty_responses'),
-    path('course_responses/', views.view_course_responses, name='view_course_responses'),
-    path('course/<int:course_id>/faculty/<int:user_id>/', views.course_detail, name='course_detail'),
-    path('course/<int:course_id>/course/<int:user_id>/', views.course_response_detail, name='course_response_detail'),
+
+    # Faculty Dashboard URL
+    path('dashboard/', views.dashboard, name='dashboard'),
+
+    # URLs for viewing evaluation details linked from the dashboard
+    # Now using assignment_id to identify the specific offering/context
+    path('assignment/<int:assignment_id>/faculty_eval/', views.course_detail, name='course_detail'),
+    path('assignment/<int:assignment_id>/course_eval/', views.course_response_detail, name='course_response_detail'),
+
+    # URL for faculty to view students in a batch they are assigned to
+    path('batch/<int:batch_id>/students/', views.faculty_batch_detail, name='faculty_batch_detail'),
+
+    # URLs for viewing lists of user's own responses (optional)
+    path('my_faculty_responses/', views.view_faculty_responses, name='view_faculty_responses'),
+    path('my_course_responses/', views.view_course_responses, name='view_course_responses'),
+
+    # --- Component Creation URLs ---
+    # These might be better placed in managerpanel/urls.py and protected,
+    # but kept here based on previous structure. Ensure views are protected if needed.
+    path('create/program/', views.create_program, name='create_program'),
+    path('create/course/', views.create_course, name='create_course'),
+    # path('create/faculty/', views.create_faculty, name='create_faculty'), # This is likely obsolete
+    path('create/semester/', views.create_semester, name='create_semester'),
+    path('create/year/', views.create_year, name='create_year'),
+    # Removed create_course_section as the model is removed
 ]
