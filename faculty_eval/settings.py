@@ -33,6 +33,10 @@ INSTALLED_APPS = [
     'supervisor',
     'django_select2',
     'progress',
+<<<<<<< HEAD
+=======
+     'dashboard', 
+>>>>>>> 02e626deedb27886bcb0af4c09194fa24e1b18c4
 ]
 
 MIDDLEWARE = [
