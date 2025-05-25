@@ -25,10 +25,6 @@ from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_protect
 from django.db.models import Count
 from datetime import datetime # Keep if used elsewhere
-<<<<<<< HEAD
-=======
-from django.core.paginator import Paginator
->>>>>>> 02e626deedb27886bcb0af4c09194fa24e1b18c4
 
 # ==============================================================================
 # Home and Authentication Views
