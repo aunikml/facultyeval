@@ -1,4 +1,6 @@
-{% load manager_tags %}
+{% load static %}
+{% load manager_tags %} {# This loads manager_tags.py #}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,52 +9,27 @@
     <title>{% block title %}Faculty Evaluation System{% endblock %}</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <link rel="icon" type="image/png" href="{% static 'favicon.png' %}"> {# Assuming favicon.png is in your static root #}
     <style>
         :root {
-            --primary-color: #1a73e8;
-            --secondary-color: #f1f3f4;
-            --text-color: #202124;
+            --primary-color: #1a73e8; /* Google Blue */
+            --secondary-color: #f1f3f4; /* Light grey */
+            --text-color: #202124; /* Google Dark Grey */
         }
-
-        body {
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            color: var(--text-color);
-            background-color: var(--secondary-color);
-        }
-
-        .navbar {
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-        }
-
-        .nav-link {
-            transition: color 0.2s ease-in-out;
-        }
-
-        .nav-link:hover {
-            color: #e8f0fe !important;
-        }
-
-        .main-content {
-            flex: 1 0 auto;
-            padding-bottom: 2rem;
-        }
-
-        footer {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 1rem 0;
-            margin-top: auto;
-        }
+        body { display: flex; flex-direction: column; min-height: 100vh; color: var(--text-color); background-color: var(--secondary-color); }
+        .navbar { box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.3s ease; }
+        .nav-link { transition: color 0.2s ease-in-out; }
+        .nav-link:hover { color: #e8f0fe !important; }
+        .main-content { flex: 1 0 auto; padding-bottom: 2rem; /* For footer spacing */ }
+        footer { background-color: var(--primary-color); color: white; padding: 1rem 0; margin-top: auto; }
     </style>
     {% block extra_css %}{% endblock %}
+    {% block extra_head %}{% endblock %} {# Added extra_head for consistency #}
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
+            {# This link points to the faculty dashboard, which is fine. #}
             <a class="navbar-brand" href="{% url 'responseupload:dashboard' %}">
                 <i class="bi bi-house-door-fill me-2"></i> Faculty Evaluation System
             </a>
@@ -63,13 +40,15 @@
                 <ul class="navbar-nav ms-auto">
                     {% if user.is_authenticated %}
                         <li class="nav-item">
-                            <a class="nav-link active" aria-current="page" href="{% url 'responseupload:dashboard' %}"><i class="bi bi-speedometer me-1"></i> Faculty Dashboard</a>
+                            {# This link also correctly points to the faculty dashboard. #}
+                            <a class="nav-link {% if request.resolver_match.view_name == 'responseupload:dashboard' %}active{% endif %}" aria-current="page" href="{% url 'responseupload:dashboard' %}"><i class="bi bi-speedometer me-1"></i> Faculty Dashboard</a>
                         </li>
 
                         {% is_manager_user user as user_is_manager %}
                         {% if user_is_manager %}
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'managerpanel:manager_dashboard' %}"><i class="bi bi-person-badge me-1"></i> Manager Panel</a>
+                                {# This link correctly points to the manager dashboard. #}
+                                <a class="nav-link {% if request.resolver_match.view_name == 'managerpanel:manager_dashboard' %}active{% endif %}" href="{% url 'managerpanel:manager_dashboard' %}"><i class="bi bi-person-badge me-1"></i> Manager Panel</a>
                             </li>
                         {% endif %}
 
@@ -94,35 +73,20 @@
     </nav>
 
     <main class="main-content">
-        <div class="container mt-4">
-            {% block content %}
-            {% endblock %}
-        </div>
+        {# Content will be injected here by child templates #}
+        {% block content %}
+        {% endblock %}
     </main>
 
     <footer class="text-center">
         <div class="container">
-            <p class="mb-0">&copy; {% now "Y" %} Faculty Evaluation System. All rights reserved.</p>
+            <p class="mb-0">© {% now "Y" %} Faculty Evaluation System. All rights reserved.</p>
         </div>
     </footer>
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Add smooth scrolling for nav links
-        document.querySelectorAll('.nav-link').forEach(link => {
-            link.addEventListener('click', function(e) {
-                if (this.getAttribute('href').startsWith('#')) {
-                    e.preventDefault();
-                    const targetId = this.getAttribute('href').substring(1);
-                    const targetElement = document.getElementById(targetId);
-                    if (targetElement) {
-                        targetElement.scrollIntoView({ behavior: 'smooth' });
-                    }
-                }
-            });
-        });
-    </script>
+    {# Removed the smooth scrolling JS for now to simplify debugging, can be added back later #}
     {% block extra_js %}{% endblock %}
 </body>
 </html>
